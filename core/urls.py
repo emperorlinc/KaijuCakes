@@ -15,4 +15,8 @@ urlpatterns = [
 
     path('category/', views.category_list),
     path('category/<int:pk>/', views.category_detail),
+
+    path('cart/', views.cart),
+    path('add_to_cart/<int:pk>/', views.add_to_cart),
+    path('remove_from_cart/<int:pk>/', views.remove_from_cart),
 ]

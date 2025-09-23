@@ -64,30 +64,25 @@ class Cake(models.Model):
         return self.name
 
 
+class Cart(models.Model):
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name='user')
+    total_cart_price = models.DecimalField(
+        max_digits=12, decimal_places=2, default=0)
+
+    def __str__(self) -> str:
+        return self.user.username
+
+
 class CartItem(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    cake = models.ForeignKey(
-        Cake, on_delete=models.CASCADE, related_name='cake')
+    cake = models.ForeignKey(Cake, on_delete=models.CASCADE)
     quantity = models.IntegerField(default=1)
-    total_price = models.DecimalField(max_digits=8, decimal_places=2)
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
+    total_price = models.DecimalField(
+        max_digits=12, decimal_places=2, default=0)
 
     def __str__(self) -> str:
         return self.cake.name
 
-    @property
     def total_price(self):
         return self.cake.price * self.quantity
-
-
-class Cart(models.Model):
-    user = models.OneToOneField(
-        User, on_delete=models.CASCADE, related_name='user')
-    cart_item = models.ForeignKey(
-        CartItem, on_delete=models.CASCADE, blank=True, null=True, related_name='cartItem')
-    total_cart_price = models.DecimalField(max_digits=8, decimal_places=2)
-
-    def __str__(self) -> str:
-        return self.item.cake.name
-
-
-# TODO: ORDER TABLE.
