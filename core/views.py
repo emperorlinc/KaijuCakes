@@ -53,16 +53,17 @@ def api_overview(request):
             'function': 'List of cakes in the category.',
             'method': 'get'
         }, {
-            'endpoint': '',
-            'function': 'Add items to cart',
+            'endpoint': 'add_to_cart/<int:pk>/',
+            'function': 'Add items to cart.',
+            'method': 'post'
+        }, {
+            'endpoint': 'remove_from_cart/<int:pk>/',
+            'function': 'Remove items from cart.',
             'method': 'post'
         }, {
             'endpoint': 'cart/',
-            'function': 'Cart',
+            'function': 'Get cart.',
             'method': 'get'
-        }, {
-            'endpoint': 'order/',
-            'function': 'Place order of the items in the cart.'
         }
     ]
     return Response(overview, status=status.HTTP_200_OK)
@@ -201,7 +202,7 @@ def remove_from_cart(request, pk):
     try:
         cart_item = CartItem.objects.get(cart=cart, cake=cake)
     except:
-        return Response({"message": "Not found."})
+        return Response({"message": "Not found."}, status=status.HTTP_404_NOT_FOUND)
 
     if cart_item.quantity <= 0:
         cart_item.delete()
@@ -211,4 +212,22 @@ def remove_from_cart(request, pk):
         cart_item.save()
 
     serializer = CartItemSerializer(cart_item)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated, IsHostOrReadOnly])
+def remove_cart_item(request, pk):
+    cart = get_object_or_404(Cart, user=request.user)
+    cake = get_object_or_404(Cake, id=pk)
+
+    try:
+        cart_item = CartItem.objects.get(cart=cart, cake=cake)
+    except:
+        return Response({"message": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    cart_item.delete()
+
+    serializer = CartSerializer(cart)
     return Response(serializer.data, status=status.HTTP_200_OK)
