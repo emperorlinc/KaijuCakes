@@ -41,6 +41,21 @@ def api_overview(request):
             'function': 'Cake details.',
             'method': 'get'
         }, {
+            'endpoint': 'cake_create/',
+            'function': 'Create cake.',
+            'method': 'post',
+            'restriction': 'Only a superuser can create a cake.'
+        }, {
+            'endpoint': 'cake_update/<int:pk>/',
+            'function': 'Update cake.',
+            'method': 'patch',
+            'restriction': 'Only a superuser can update a cake'
+        }, {
+            'endpoint': 'cake_delete/<int:pk>/',
+            'function': 'Delete cake.',
+            'method': 'delete',
+            'restriction': 'Only a superuser can delete a cake.'
+        },  {
             'endpoint': 'queryCakes/<str:query>/',
             'function': 'Query cake by name or color.',
             'method': 'get'
@@ -48,6 +63,16 @@ def api_overview(request):
             'endpoint': 'category/',
             'function': 'List of categories of cakes.',
             'method': 'get'
+        }, {
+            'endpoint': 'category_create/',
+            'function': 'Create cake category.',
+            'method': 'create',
+            'restriction': 'Only a superuser can create a category.'
+        }, {
+            'endpoint': 'category_delete/<int:pk>/',
+            'function': 'Delete a cake category.',
+            'method': 'delete',
+            'restriction': 'Only a superuser can delete a category.'
         }, {
             'endpoint': 'category/<int:pk>/',
             'function': 'List of cakes in the category.',
@@ -113,6 +138,42 @@ def cakes_list(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated, IsSuperuserOrReadOnly])
+def cake_create(request):
+    cake = CakeSerializer(data=request.data)
+    if cake.is_valid():
+        if request.user.is_superuser:
+            cake.save()
+    serializer = CakeSerializer(cake, many=True)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+@api_view(['PATCH'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated, IsSuperuserOrReadOnly])
+def cake_update(request, pk):
+
+    cake = get_object_or_404(Cake, id=pk)
+
+    serializer = CakeSerializer(instance=cake, data=request.data)
+    if cake.is_valid():
+        cake.save()
+    serializer = CakeSerializer(cake, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['DELETE'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated, IsSuperuserOrReadOnly])
+def cake_delete(request, pk):
+    cake = get_object_or_404(cake, id=pk)
+    if request.user.is_superuser:
+        cake.delete()
+    return Response({"message": "Deleted successfully"}, status=status.HTTP_200_OK)
+
+
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
@@ -149,6 +210,18 @@ def category_list(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated, IsSuperuserOrReadOnly])
+def category_create(request):
+    category = CategorySerializer(data=request.data)
+    if category.is_valid():
+        if request.user.is_superuser:
+            category.save()
+    serializer = CategorySerializer(category, many=True)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
@@ -159,9 +232,19 @@ def category_detail(request, pk):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
+@api_view(['DELETE'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated, IsSuperuserOrReadOnly])
+def category_delete(request, pk):
+    category = get_object_or_404(Category, id=pk)
+    if request.user.is_superuser:
+        category.delete()
+    return Response({"message": "Deleted successfully"}, status=status.HTTP_200_OK)
+
+
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, IsHostOrReadOnly])
 def cart(request):
     cart, created = Cart.objects.get_or_create(user=request.user)
 
@@ -187,7 +270,7 @@ def add_to_cart(request, pk):
         cart_item.total_price = cart_item.total_price()
 
     cart_item.save()
-    serializer = CartItemSerializer(cart_item)
+    serializer = CartItemSerializer(instance=cart_item)
 
     return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -211,11 +294,11 @@ def remove_from_cart(request, pk):
         cart_item.total_price = cart_item.total_price
         cart_item.save()
 
-    serializer = CartItemSerializer(cart_item)
+    serializer = CartItemSerializer(instance=cart_item)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@api_view(['POST'])
+@api_view(['DELETE'])
 @authentication_classes([SessionAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated, IsHostOrReadOnly])
 def remove_cart_item(request, pk):

@@ -10,11 +10,16 @@ urlpatterns = [
     path('access_token/', views.access_token),
 
     path('cakes/', views.cakes_list),
+    path('cake_create/', views.cake_create),
     path('cake/<int:pk>/', views.cake_detail),
+    path('cake_update/<int:pk>/', views.cake_update),
+    path('cake_delete/<int:pk>/', views.cake_delete),
     path('queryCakes/<str:query>/', views.query_cake),
 
     path('category/', views.category_list),
+    path('category_create/', views.category_create),
     path('category/<int:pk>/', views.category_detail),
+    path('category_delete/<int:pk>/', views.category_delete),
 
     path('cart/', views.cart),
     path('add_to_cart/<int:pk>/', views.add_to_cart),
