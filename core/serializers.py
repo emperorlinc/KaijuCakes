@@ -10,7 +10,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
-        modes = Category
+        model = Category
         fields = '__all__'
 
 

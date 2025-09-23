@@ -1,3 +1,4 @@
+from unicodedata import category
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework import status
@@ -6,11 +7,11 @@ from rest_framework.decorators import authentication_classes, permission_classes
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
-from core.serializers import CakeSerializer, UserSerializer
-from core.models import Cake, User
+from core.serializers import CakeSerializer, CategorySerializer, UserSerializer
+from core.models import Cake, Category, User
 
 from django.shortcuts import get_object_or_404
-from django.contrib.auth import login
+from django.db.models import Q
 
 
 # Create your views here.
@@ -90,3 +91,49 @@ def cakes_list(request):
     cakes = Cake.objects.all()
     serializers = CakeSerializer(cakes, many=True)
     return Response(serializers.data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def cake_detail(request, pk):
+    cakes = get_object_or_404(Cake, id=pk)
+    serializers = CakeSerializer(cakes, many=False)
+    return Response(serializers.data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def query_cake(request, query):
+    if query:
+        cakes = Cake.objects.filter(
+            Q(name__icontains=query) |
+            Q(color__icontains=query)
+        )
+    else:
+        cakes = Cake.objects.all()
+    serializers = CakeSerializer(cakes, many=True)
+    return Response(serializers.data, status=status.HTTP_302_FOUND)
+
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def category_list(request):
+    try:
+        category = Category.objects.all()
+        serializer = CategorySerializer(category, many=True)
+    except:
+        return Response({"Detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def category_detail(request, pk):
+    category = get_object_or_404(Category, id=pk)
+    cakes = Cake.objects.filter(category=category)
+    serializer = CategorySerializer(cakes, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)

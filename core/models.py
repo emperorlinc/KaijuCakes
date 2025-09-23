@@ -58,6 +58,7 @@ class Cake(models.Model):
         Category, on_delete=models.CASCADE, related_name='category')
     price = models.DecimalField(max_digits=8, decimal_places=2)
     step = models.IntegerField(default=1)
+    color = models.CharField(max_length=64, null=True)
 
     def __str__(self) -> str:
         return self.name
