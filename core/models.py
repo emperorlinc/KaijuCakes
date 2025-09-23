@@ -28,6 +28,12 @@ class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=64, unique=True)
     email = models.EmailField(max_length=64, unique=True)
     name = models.CharField(max_length=64)
+    is_staff = models.BooleanField(default=False)
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['name', 'username']
+
+    objects = CustomUserManager()
 
     class Meta:
         ordering = ['name']
@@ -48,8 +54,9 @@ class Category(models.Model):
 
 class Cake(models.Model):
     name = models.CharField(max_length=64)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
-    price = models.DecimalField(max_digits=4, decimal_places=2)
+    category = models.ForeignKey(
+        Category, on_delete=models.CASCADE, related_name='category')
+    price = models.DecimalField(max_digits=8, decimal_places=2)
     step = models.IntegerField(default=1)
 
     def __str__(self) -> str:
@@ -57,9 +64,11 @@ class Cake(models.Model):
 
 
 class CartItem(models.Model):
-    cake = models.ForeignKey(Cake, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    cake = models.ForeignKey(
+        Cake, on_delete=models.CASCADE, related_name='cake')
     quantity = models.IntegerField(default=1)
-    total_price = models.DecimalField(max_digit=6, decimal_places=2)
+    total_price = models.DecimalField(max_digits=8, decimal_places=2)
 
     def __str__(self) -> str:
         return self.cake.name
@@ -70,10 +79,11 @@ class CartItem(models.Model):
 
 
 class Cart(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name='user')
     cart_item = models.ForeignKey(
-        CartItem, on_delete=models.CASCADE, blank=True, null=True)
-    total_cart_price = models.DecimalField(max_digits=7, decimal_places=2)
+        CartItem, on_delete=models.CASCADE, blank=True, null=True, related_name='cartItem')
+    total_cart_price = models.DecimalField(max_digits=8, decimal_places=2)
 
     def __str__(self) -> str:
         return self.item.cake.name
