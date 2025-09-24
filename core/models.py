@@ -59,6 +59,7 @@ class Cake(models.Model):
     price = models.DecimalField(max_digits=8, decimal_places=2)
     step = models.IntegerField(default=1)
     color = models.CharField(max_length=64, null=True)
+    image = models.ImageField(upload_to='img', blank=True, null=True)
 
     def __str__(self) -> str:
         return self.name
