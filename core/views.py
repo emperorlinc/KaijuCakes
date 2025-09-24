@@ -31,6 +31,11 @@ def api_overview(request):
             'method': 'post',
             'restriction': 'none'
         }, {
+            'endpoint': 'logout/',
+            'function': 'Log a user out by deleting their token.',
+            'method': 'post',
+            'restriction': 'User needs to be authenticated.'
+        }, {
             'endpoint': 'access_token/',
             'function': 'Uses the access token to get the user detail.',
             'method': 'get',
@@ -127,6 +132,8 @@ def login(request):
     if not user.check_password(request.data['password']):
         return Response({"message": "Not found."}, status=status.HTTP_400_BAD_REQUEST)
     token, created = Token.objects.get_or_create(user=user)
+    if created:
+        token.save()
     serializer = UserSerializer(instance=user)
     return Response({"token": token.key, "user": serializer.data})
 
