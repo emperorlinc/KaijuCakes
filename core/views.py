@@ -23,23 +23,28 @@ def api_overview(request):
         {
             'endpoint': 'register/',
             'function': 'Register a user.',
-            'method': 'post'
+            'method': 'post',
+            'restriction': 'none'
         }, {
             'endpoint': 'login/',
             'function': 'Login in a user.',
-            'method': 'post'
+            'method': 'post',
+            'restriction': 'none'
         }, {
             'endpoint': 'access_token/',
-            'function': 'Use the access token to get the user detail.',
-            'method': 'get'
+            'function': 'Uses the access token to get the user detail.',
+            'method': 'get',
+            'restriction': 'none'
         }, {
             'endpoint': 'cakes/',
             'function': 'List of cakes.',
-            'method': 'get'
+            'method': 'get',
+            'restriction': 'none'
         }, {
             'endpoint': 'cake/<int:pk>/',
             'function': 'Cake details.',
-            'method': 'get'
+            'method': 'get',
+            'restriction': 'none'
         }, {
             'endpoint': 'cake_create/',
             'function': 'Create cake.',
@@ -58,11 +63,13 @@ def api_overview(request):
         },  {
             'endpoint': 'queryCakes/<str:query>/',
             'function': 'Query cake by name or color.',
-            'method': 'get'
+            'method': 'get',
+            'restriction': 'Cake can be searched by name or color.'
         }, {
             'endpoint': 'category/',
             'function': 'List of categories of cakes.',
-            'method': 'get'
+            'method': 'get',
+            'restriction': 'none'
         }, {
             'endpoint': 'category_create/',
             'function': 'Create cake category.',
@@ -76,19 +83,23 @@ def api_overview(request):
         }, {
             'endpoint': 'category/<int:pk>/',
             'function': 'List of cakes in the category.',
-            'method': 'get'
+            'method': 'get',
+            'restriction': 'none'
         }, {
             'endpoint': 'add_to_cart/<int:pk>/',
             'function': 'Add items to cart.',
-            'method': 'post'
+            'method': 'post',
+            'restriction': 'A user can only add items to their own cart.'
         }, {
             'endpoint': 'remove_from_cart/<int:pk>/',
             'function': 'Remove items from cart.',
-            'method': 'post'
+            'method': 'post',
+            'restriction': 'A user can only remove item from their own cart.'
         }, {
             'endpoint': 'cart/',
             'function': 'Get cart.',
-            'method': 'get'
+            'method': 'get',
+            'restriction': 'A user can only get their own cart.'
         }
     ]
     return Response(overview, status=status.HTTP_200_OK)
@@ -118,6 +129,18 @@ def login(request):
     token, created = Token.objects.get_or_create(user=user)
     serializer = UserSerializer(instance=user)
     return Response({"token": token.key, "user": serializer.data})
+
+
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication, TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def logout(request):
+    try:
+        token = Token.objects.get(user=request.user)
+    except:
+        return Response({"message": "User was not authenticated."}, status=status.HTTP_400_BAD_REQUEST)
+    token.delete()
+    return Response({"message": "User logged out successfully."}, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])
@@ -171,6 +194,8 @@ def cake_delete(request, pk):
     cake = get_object_or_404(cake, id=pk)
     if request.user.is_superuser:
         cake.delete()
+    else:
+        return Response({"message": "Only superusers can delete products"}, status=status.HTTP_401_UNAUTHORIZED)
     return Response({"message": "Deleted successfully"}, status=status.HTTP_200_OK)
 
 
@@ -204,9 +229,10 @@ def query_cake(request, query):
 def category_list(request):
     try:
         category = Category.objects.all()
-        serializer = CategorySerializer(category, many=True)
     except:
-        return Response({"message": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"message": "No category yet."}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = CategorySerializer(category, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -218,6 +244,10 @@ def category_create(request):
     if category.is_valid():
         if request.user.is_superuser:
             category.save()
+        else:
+            return Response({"message": "Only superusers can create category."}, status=status.HTTP_401_UNAUTHORIZED)
+    else:
+        return Response({"message": "Category form is invalid."}, status=status.HTTP_400_BAD_REQUEST)
     serializer = CategorySerializer(category, many=True)
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -239,6 +269,8 @@ def category_delete(request, pk):
     category = get_object_or_404(Category, id=pk)
     if request.user.is_superuser:
         category.delete()
+    else:
+        return Response({"message": "Only superusers can delete."}, status=status.HTTP_401_UNAUTHORIZED)
     return Response({"message": "Deleted successfully"}, status=status.HTTP_200_OK)
 
 
@@ -285,7 +317,7 @@ def remove_from_cart(request, pk):
     try:
         cart_item = CartItem.objects.get(cart=cart, cake=cake)
     except:
-        return Response({"message": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"message": "Item was not in cart."}, status=status.HTTP_404_NOT_FOUND)
 
     if cart_item.quantity <= 0:
         cart_item.delete()
@@ -308,7 +340,7 @@ def remove_cart_item(request, pk):
     try:
         cart_item = CartItem.objects.get(cart=cart, cake=cake)
     except:
-        return Response({"message": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"message": "Item was not in cart."}, status=status.HTTP_404_NOT_FOUND)
 
     cart_item.delete()
 
