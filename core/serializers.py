@@ -15,18 +15,25 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class CakeSerializer(serializers.ModelSerializer):
-    class Meta:
+    category = CategorySerializer()
+
+    class Meta(object):
         model = Cake
         fields = '__all__'
 
 
-class CartItemSerializer(serializers.ModelSerializer):
+class CartSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
+
     class Meta:
-        model = CartItem
+        model = Cart
         fields = '__all__'
 
 
-class CartSerializer(serializers.ModelSerializer):
+class CartItemSerializer(serializers.ModelSerializer):
+    cake = CakeSerializer()
+    cart = CartSerializer()
+
     class Meta:
-        model = Cart
+        model = CartItem
         fields = '__all__'

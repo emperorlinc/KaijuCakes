@@ -160,8 +160,8 @@ def access_token(request):
 
 
 @api_view(['GET'])
-@authentication_classes([SessionAuthentication, TokenAuthentication])
-@permission_classes([IsAuthenticated])
+# @authentication_classes([SessionAuthentication, TokenAuthentication])
+# @permission_classes([IsAuthenticated])
 def cakes_list(request):
     cakes = Cake.objects.all()
     serializer = CakeSerializer(cakes, many=True)
@@ -207,8 +207,8 @@ def cake_delete(request, pk):
 
 
 @api_view(['GET'])
-@authentication_classes([SessionAuthentication, TokenAuthentication])
-@permission_classes([IsAuthenticated])
+# @authentication_classes([SessionAuthentication, TokenAuthentication])
+# @permission_classes([IsAuthenticated])
 def cake_detail(request, pk):
     cake = get_object_or_404(Cake, id=pk)
     serializer = CakeSerializer(cake, many=False)
@@ -216,8 +216,8 @@ def cake_detail(request, pk):
 
 
 @api_view(['GET'])
-@authentication_classes([SessionAuthentication, TokenAuthentication])
-@permission_classes([IsAuthenticated])
+# @authentication_classes([SessionAuthentication, TokenAuthentication])
+# @permission_classes([IsAuthenticated])
 def query_cake(request, query):
     if query:
         cakes = Cake.objects.filter(
@@ -231,8 +231,8 @@ def query_cake(request, query):
 
 
 @api_view(['GET'])
-@authentication_classes([SessionAuthentication, TokenAuthentication])
-@permission_classes([IsAuthenticated])
+# @authentication_classes([SessionAuthentication, TokenAuthentication])
+# @permission_classes([IsAuthenticated])
 def category_list(request):
     try:
         category = Category.objects.all()
@@ -260,8 +260,8 @@ def category_create(request):
 
 
 @api_view(['GET'])
-@authentication_classes([SessionAuthentication, TokenAuthentication])
-@permission_classes([IsAuthenticated])
+# @authentication_classes([SessionAuthentication, TokenAuthentication])
+# @permission_classes([IsAuthenticated])
 def category_detail(request, pk):
     category = get_object_or_404(Category, id=pk)
     cakes = Cake.objects.filter(category=category)
