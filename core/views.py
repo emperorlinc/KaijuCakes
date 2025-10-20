@@ -265,7 +265,7 @@ def category_create(request):
 def category_detail(request, pk):
     category = get_object_or_404(Category, id=pk)
     cakes = Cake.objects.filter(category=category)
-    serializer = CategorySerializer(cakes, many=True)
+    serializer = CakeSerializer(cakes, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
