@@ -80,7 +80,7 @@ class CartItem(models.Model):
     cake = models.ForeignKey(Cake, on_delete=models.CASCADE)
     quantity = models.IntegerField(default=1)
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
-    total_price = models.DecimalField(
+    item_total_price = models.DecimalField(
         max_digits=12, decimal_places=2, default=0)
 
     def __str__(self) -> str:

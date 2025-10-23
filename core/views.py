@@ -97,9 +97,14 @@ def api_overview(request):
             'restriction': 'A user can only add items to their own cart.'
         }, {
             'endpoint': 'remove_from_cart/<int:pk>/',
-            'function': 'Remove items from cart.',
+            'function': 'Reduces the quantity of an item in a cart, if the quantity is reduced to zero, item will be totally removed.',
             'method': 'post',
-            'restriction': 'A user can only remove item from their own cart.'
+            'restriction': 'A user can only remove item from their own cart\nid of the cart and the authenticated and authorized user is required'
+        }, {
+            'endpoint': 'remove_cart_item/<int:pk>/',
+            'function': 'Remove cart item at once irrespective of the quantity.',
+            'method': 'post',
+            'restriction': 'A user can only remove item from their own cart\nid of the cart and the authenticated and authorized user is required.'
         }, {
             'endpoint': 'cart/',
             'function': 'Get cart.',
@@ -303,12 +308,15 @@ def add_to_cart(request, pk):
     cart_item, created = CartItem.objects.get_or_create(cart=cart, cake=cake)
 
     if created:
-        cart_item.total_price = cart_item.total_price()
+        cart_item.item_total_price = cart_item.total_price()
     else:
         cart_item.quantity += 1
-        cart_item.total_price = cart_item.total_price()
+        cart_item.item_total_price += cart_item.cake.price
+
+    cart.total_cart_price += cart_item.cake.price
 
     cart_item.save()
+    cart.save()
     serializer = CartItemSerializer(instance=cart_item)
 
     return Response(serializer.data, status=status.HTTP_200_OK)
@@ -330,8 +338,11 @@ def remove_from_cart(request, pk):
         cart_item.delete()
     else:
         cart_item.quantity -= 1
-        cart_item.total_price = cart_item.total_price
+        cart_item.total_price -= cart_item.cake.price
         cart_item.save()
+
+    cart.total_cart_price -= cart_item.cake.price
+    cart.save()
 
     serializer = CartItemSerializer(instance=cart_item)
     return Response(serializer.data, status=status.HTTP_200_OK)
@@ -349,7 +360,9 @@ def remove_cart_item(request, pk):
     except:
         return Response({"message": "Item was not in cart."}, status=status.HTTP_404_NOT_FOUND)
 
+    cart.total_cart_price -= cart_item.total_price()
     cart_item.delete()
+    cart.save()
 
     serializer = CartSerializer(cart)
     return Response(serializer.data, status=status.HTTP_200_OK)
