@@ -292,9 +292,7 @@ def category_delete(request, pk):
 def cart(request):
     cart, created = Cart.objects.get_or_create(user=request.user)
 
-    if not created:
-        cart_item = CartItem.objects.filter(cart=cart)
-    serializer = CartItemSerializer(cart_item, many=True)
+    serializer = CartSerializer(cart)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -305,10 +303,11 @@ def add_to_cart(request, pk):
     cart = get_object_or_404(Cart,  user=request.user)
     cake = get_object_or_404(Cake, id=pk)
 
-    cart_item, created = CartItem.objects.get_or_create(cart=cart, cake=cake)
+    cart_item, created = CartItem.objects.get_or_create(cake=cake)
 
     if created:
         cart_item.item_total_price = cart_item.total_price()
+        cart.cart_item.add(cart_item)
     else:
         cart_item.quantity += 1
         cart_item.item_total_price += cart_item.cake.price
@@ -330,12 +329,12 @@ def remove_from_cart(request, pk):
     cake = get_object_or_404(Cake, id=pk)
 
     try:
-        cart_item = CartItem.objects.get(cart=cart, cake=cake)
+        cart_item = CartItem.objects.get(cake=cake)
     except:
         return Response({"message": "Item was not in cart."}, status=status.HTTP_404_NOT_FOUND)
 
-    if cart_item.quantity <= 0:
-        cart_item.delete()
+    if cart_item.quantity <= 1:
+        cart.cart_item.remove(cart_item)
     else:
         cart_item.quantity -= 1
         cart_item.total_price -= cart_item.cake.price
@@ -356,12 +355,12 @@ def remove_cart_item(request, pk):
     cake = get_object_or_404(Cake, id=pk)
 
     try:
-        cart_item = CartItem.objects.get(cart=cart, cake=cake)
+        cart_item = CartItem.objects.get(cake=cake)
     except:
         return Response({"message": "Item was not in cart."}, status=status.HTTP_404_NOT_FOUND)
 
     cart.total_cart_price -= cart_item.total_price()
-    cart_item.delete()
+    cart.cart_item.remove(cart_item)
     cart.save()
 
     serializer = CartSerializer(cart)

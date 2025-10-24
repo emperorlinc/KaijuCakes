@@ -22,18 +22,17 @@ class CakeSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class CartItemSerializer(serializers.ModelSerializer):
+    cake = CakeSerializer()
+
+    class Meta(object):
+        model = CartItem
+        fields = '__all__'
+
+
 class CartSerializer(serializers.ModelSerializer):
     user = UserSerializer()
 
     class Meta(object):
         model = Cart
-        fields = '__all__'
-
-
-class CartItemSerializer(serializers.ModelSerializer):
-    cake = CakeSerializer()
-    cart = CartSerializer()
-
-    class Meta(object):
-        model = CartItem
         fields = '__all__'

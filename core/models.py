@@ -66,20 +66,9 @@ class Cake(models.Model):
         return self.name
 
 
-class Cart(models.Model):
-    user = models.OneToOneField(
-        User, on_delete=models.CASCADE, related_name='user')
-    total_cart_price = models.DecimalField(
-        max_digits=12, decimal_places=2, default=0)
-
-    def __str__(self) -> str:
-        return self.user.username
-
-
 class CartItem(models.Model):
     cake = models.ForeignKey(Cake, on_delete=models.CASCADE)
     quantity = models.IntegerField(default=1)
-    cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
     item_total_price = models.DecimalField(
         max_digits=12, decimal_places=2, default=0)
 
@@ -88,3 +77,14 @@ class CartItem(models.Model):
 
     def total_price(self):
         return self.cake.price * self.quantity
+
+
+class Cart(models.Model):
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE, related_name='user')
+    cart_item = models.ManyToManyField(CartItem)
+    total_cart_price = models.DecimalField(
+        max_digits=12, decimal_places=2, default=0)
+
+    def __str__(self) -> str:
+        return self.user.username
